@@ -10,12 +10,8 @@ const VEHICLE_TYPES = [
 ];
 
 type FipeModel = {
-  codigo: number | string;
-  nome: string;
-};
-
-type FipeModelsResponse = {
-  modelos: FipeModel[];
+  code: number | string;
+  name: string;
 };
 
 const corsHeaders = {
@@ -180,16 +176,17 @@ Deno.serve(async (req) => {
           );
         }
 
-        const result = await response.json() as FipeModelsResponse;
+        // A API FIPE v2 retorna um array direto.
+        const models = await response.json() as FipeModel[];
 
-        if (!Array.isArray(result.modelos)) {
+        if (!Array.isArray(models)) {
           throw new Error("Formato inesperado na resposta da FIPE.");
         }
 
-        const rows = result.modelos.map((model) => ({
+        const rows = models.map((model) => ({
           brand_id: brand.id,
-          fipe_model_code: String(model.codigo),
-          name: model.nome,
+          fipe_model_code: String(model.code),
+          name: model.name,
           vehicle_type: brand.vehicle_type,
           is_active: true,
         }));
@@ -234,7 +231,6 @@ Deno.serve(async (req) => {
     // 5. Atualizar histórico da sincronização.
 
     const hasErrors = errors.length > 0;
-
     const finalStatus = hasErrors ? "partial" : "success";
 
     const { error: updateError } = await supabase
